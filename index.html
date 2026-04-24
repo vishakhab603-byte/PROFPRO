@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ProfPro — Teacher Availability</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+    <style>
+        /* ============================================
+           CSS VARIABLES — DARK THEME (default)
+           ============================================ */
+        :root {
+            --bg:         #0b0f1a;
+            --surface:    #131929;
+            --surface-2:  #1c2540;
+            --border:     #232d45;
+            --accent:     #f5c542;
+            --accent-dim: rgba(245, 197, 66, 0.12);
+            --text:       #e8eaf0;
+            --text-muted: #7a85a0;
+            --green:      #3ddc84;
+            --red:        #ff6b6b;
+            --blue:       #5b9cf6;
+            --orange:     #ff9f43;
+            --gray:       #4a5568;
+            --radius:     12px;
+            --font:       'IBM Plex Sans', sans-serif;
+            --mono:       'IBM Plex Mono', monospace;
+            --shadow:     0 4px 24px rgba(0,0,0,0.4);
+            --dot-color:  #1e2a45;
+        }
+
+        /* ============================================
+           LIGHT THEME
+           ============================================ */
+        [data-theme="light"] {
+            --bg:         #f0f2f8;
+            --surface:    #ffffff;
+            --surface-2:  #e8ecf4;
+            --border:     #d0d7e8;
+            --accent:     #d4a017;
+            --accent-dim: rgba(212, 160, 23, 0.1);
+            --text:       #1a1f2e;
+            --text-muted: #5a6580;
+            --green:      #2ab36a;
+            --red:        #e05252;
+            --blue:       #3a7fd5;
+            --orange:     #e07b20;
+            --gray:       #8a9ab8;
+            --shadow:     0 4px 24px rgba(0,0,0,0.1);
+            --dot-color:  #c8d0e0;
+        }
+
+        /* ============================================
+           DEPARTMENT COLORS
+           ============================================ */
+        [data-dept-color="0"] { --dept-color: #f5c542; --dept-bg: rgba(245,197,66,0.1); }
+        [data-dept-color="1"] { --dept-color: #5b9cf6; --dept-bg: rgba(91,156,246,0.1); }
+        [data-dept-color="2"] { --dept-color: #3ddc84; --dept-bg: rgba(61,220,132,0.1); }
+        [data-dept-color="3"] { --dept-color: #ff9f43; --dept-bg: rgba(255,159,67,0.1); }
+        [data-dept-color="4"] { --dept-color: #c77dff; --dept-bg: rgba(199,125,255,0.1); }
+        [data-dept-color="5"] { --dept-color: #ff6b9d; --dept-bg: rgba(255,107,157,0.1); }
+        [data-dept-color="6"] { --dept-color: #4cc9f0; --dept-bg: rgba(76,201,240,0.1); }
+        [data-dept-color="7"] { --dept-color: #f72585; --dept-bg: rgba(247,37,133,0.1); }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+            background-size: 28px 28px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* ============================================
+           HEADER
+           ============================================ */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 34px; height: 34px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+        }
+
+        .logo-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.3px;
+        }
+
+        .logo-text span { color: var(--accent); }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+        .theme-toggle:hover { border-color: var(--accent); background: var(--accent-dim); }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-family: var(--mono);
+            color: var(--green);
+            background: rgba(61, 220, 132, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(61, 220, 132, 0.25);
+        }
+
+        .live-dot {
+            width: 7px; height: 7px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.3; }
+        }
+
+        /* ============================================
+           MAIN LAYOUT
+           ============================================ */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
+        .page-subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 2px; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-family: var(--font);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+        .btn-primary:hover { filter: brightness(0.9); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,197,66,0.3); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
+
+        /* ============================================
+           STATS ROW
+           ============================================ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: border-color 0.2s, background 0.3s;
+        }
+
+        .stat-card:hover { border-color: var(--accent); }
+        .stat-icon { font-size: 1.4rem; }
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: var(--mono);
+            line-height: 1;
+        }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+        /* ============================================
+           FILTER BAR + SEARCH
+           ============================================ */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            font-family: var(--mono);
+            color: var(--text-muted);
+            margin-right: 4px;
+        }
+
+        .filter-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-muted);
+            transition: all 0.15s;
+            font-family: var(--font);
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 340px;
+            padding: 9px 12px 9px 36px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s, background 0.3s;
+        }
+
+        .search-input:focus { border-color: var(--accent); }
+        .search-input::placeholder { color: var(--text-muted); }
+
+        /* ============================================
+           TEACHER GRID
+           ============================================ */
+        .teacher-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .teacher-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, background 0.3s;
+            animation: fadeUp 0.3s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .teacher-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+            border-color: var(--surface-2);
+        }
+
+        /* Status colour left border */
+        .teacher-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 16px; bottom: 16px;
+            width: 3px;
+            border-radius: 2px;
+            background: var(--status-color, var(--gray));
+        }
+
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-left: 12px;
+        }
+
+        /* Avatar with initials + dept color */
+        .teacher-avatar {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: var(--dept-bg, var(--accent-dim));
+            border: 1px solid color-mix(in srgb, var(--dept-color, var(--accent)) 30%, transparent);
+            display: grid;
+            place-items: center;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--dept-color, var(--accent));
+            font-family: var(--mono);
+            flex-shrink: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .card-actions { display: flex; gap: 6px; }
+
+        .icon-btn {
+            width: 30px; height: 30px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+            transition: all 0.15s;
+        }
+
+        .icon-btn:hover { color: var(--text); border-color: var(--text-muted); }
+        .icon-btn.del:hover { color: var(--red); border-color: var(--red); background: rgba(255,107,107,0.08); }
+
+        .teacher-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+            padding-left: 12px;
+        }
+
+        .teacher-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            padding-left: 12px;
+            font-family: var(--mono);
+        }
+
+        /* Department tag */
+        .dept-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 6px;
+            margin-left: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            font-family: var(--mono);
+            background: var(--dept-bg, var(--accent-dim));
+            color: var(--dept-color, var(--accent));
+            border: 1px solid color-mix(in srgb, var(--dept-color, var(--accent)) 25%, transparent);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            margin-left: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .status-badge:hover { opacity: 0.85; transform: scale(0.97); }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        /* Last updated timestamp */
+        .last-updated {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-family: var(--mono);
+            padding-left: 12px;
+            margin-top: 8px;
+            opacity: 0.75;
+        }
+
+        /* ============================================
+           STATUS COLOURS
+           ============================================ */
+        [data-status="Available"]   { --status-color: #3ddc84; }
+        [data-status="In Lecture"]  { --status-color: #ff6b6b; }
+        [data-status="In Meeting"]  { --status-color: #5b9cf6; }
+        [data-status="On Break"]    { --status-color: #ff9f43; }
+        [data-status="Offline"]     { --status-color: #4a5568; }
+
+        /* ============================================
+           EMPTY STATE
+           ============================================ */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-illustration {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-illustration svg {
+            width: 160px;
+            height: 120px;
+            opacity: 0.6;
+        }
+
+        .empty-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .empty-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            max-width: 280px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .empty-action {
+            margin-top: 1.25rem;
+        }
+
+        /* Error state */
+        .state-box {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+
+        .state-box .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .state-box p { font-size: 0.9rem; }
+
+        .spinner {
+            width: 32px; height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ============================================
+           MODAL
+           ============================================ */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .overlay.open { opacity: 1; pointer-events: all; }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            transform: translateY(20px);
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .overlay.open .modal { transform: translateY(0); }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title { font-size: 1.1rem; font-weight: 700; }
+
+        .close-btn {
+            background: none; border: none;
+            font-size: 1.2rem; cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.15s;
+            line-height: 1;
+        }
+
+        .close-btn:hover { color: var(--text); }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s, background 0.3s;
+        }
+
+        .form-input:focus, .form-select:focus { border-color: var(--accent); }
+        .form-select option { background: var(--surface); color: var(--text); }
+
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        /* ============================================
+           TOAST
+           ============================================ */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 18px;
+            font-size: 0.875rem;
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow);
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: rgba(61,220,132,0.4); }
+        .toast.error   { border-color: rgba(255,107,107,0.4); }
+
+        /* Import preview item */
+        .import-item {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .import-item-info { flex: 1; }
+        .import-item-name { font-weight: 600; margin-bottom: 2px; }
+        .import-item-meta { color: var(--text-muted); font-size: 0.75rem; font-family: var(--mono); }
+        .import-item-remove {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-muted); font-size: 16px; padding: 2px 6px;
+            border-radius: 4px; transition: color 0.15s;
+        }
+        .import-item-remove:hover { color: var(--red); }
+
+        @media (max-width: 600px) {
+            main { padding: 1rem; }
+            .page-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">📡</div>
+            <span class="logo-text">Prof<span>Pro</span></span>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" id="themeToggle" title="Toggle light/dark mode" onclick="toggleTheme()">🌙</button>
+            <div class="live-badge">
+                <div class="live-dot"></div>
+                LIVE
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main>
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Faculty Dashboard</h1>
+                <p class="page-subtitle">Track real-time availability of your department's teachers</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-ghost" onclick="document.getElementById('csvFileInput').click()" title="Import from Excel or CSV">
+                    📊 Import Sheet
+                </button>
+                <button class="btn btn-ghost" onclick="document.getElementById('imgFileInput').click()" title="Scan timetable photo with AI">
+                    📷 Scan Timetable
+                </button>
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    ＋ Add Teacher
+                </button>
+            </div>
+            <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleCSVUpload(event)"/>
+            <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)"/>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div>
+                    <div class="stat-value" id="statTotal">—</div>
+                    <div class="stat-label">Total Faculty</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🟢</div>
+                <div>
+                    <div class="stat-value" id="statAvail">—</div>
+                    <div class="stat-label">Available</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔴</div>
+                <div>
+                    <div class="stat-value" id="statBusy">—</div>
+                    <div class="stat-label">In Lecture / Meeting</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div>
+                    <div class="stat-value" id="statPct">—</div>
+                    <div class="stat-label">Availability Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters + Search -->
+        <div class="filter-bar">
+            <span class="filter-label">FILTER:</span>
+            <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+            <button class="filter-btn" onclick="setFilter('Available', this)">🟢 Available</button>
+            <button class="filter-btn" onclick="setFilter('In Lecture', this)">🔴 In Lecture</button>
+            <button class="filter-btn" onclick="setFilter('In Meeting', this)">🔵 In Meeting</button>
+            <button class="filter-btn" onclick="setFilter('On Break', this)">🟠 On Break</button>
+            <button class="filter-btn" onclick="setFilter('Offline', this)">⚫ Offline</button>
+        </div>
+
+        <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" placeholder="Search by name, subject, or department…" id="searchInput" oninput="renderCards()"/>
+        </div>
+
+        <!-- Cards -->
+        <div class="teacher-grid" id="teacherGrid">
+            <div class="state-box">
+                <div class="spinner"></div>
+                <p>Loading faculty data…</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- ADD / EDIT MODAL -->
+    <div class="overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle">Add Teacher</span>
+                <button class="close-btn" onclick="closeModal()">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="fieldName">Full Name</label>
+                <input class="form-input" id="fieldName" type="text" placeholder="e.g. Dr. Arjun Mehta"/>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="fieldSubject">Subject</label>
+                <input class="form-input" id="fieldSubject" type="text" placeholder="e.g. Data Structures"/>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="fieldDept">Department</label>
+                <input class="form-input" id="fieldDept" type="text" placeholder="e.g. Computer Science"/>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="fieldStatus">Current Status</label>
+                <select class="form-select" id="fieldStatus">
+                    <option>Available</option>
+                    <option>In Lecture</option>
+                    <option>In Meeting</option>
+                    <option>On Break</option>
+                    <option>Offline</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveTeacher()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMPORT PREVIEW MODAL -->
+    <div class="overlay" id="importOverlay" onclick="handleImportOverlayClick(event)">
+        <div class="modal" style="max-width:580px">
+            <div class="modal-header">
+                <span class="modal-title" id="importModalTitle">Preview Import</span>
+                <button class="close-btn" onclick="closeImportModal()">✕</button>
+            </div>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;" id="importModalDesc">Review the entries below before adding them.</p>
+
+            <div id="importPreviewList" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:1.25rem;"></div>
+
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeImportModal()">Cancel</button>
+                <button class="btn btn-primary" id="importConfirmBtn" onclick="confirmImport()">Add All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCAN OVERLAY -->
+    <div class="overlay" id="scanOverlay">
+        <div style="text-align:center;color:var(--text);">
+            <div class="spinner" style="margin:0 auto 1rem;width:44px;height:44px;border-width:4px;"></div>
+            <div style="font-size:1rem;font-weight:600;margin-bottom:6px;" id="scanStatusText">Scanning timetable…</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">Claude AI is reading your image</div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ── Config ─────────────────────────────────────────────
+        const API_BASE = 'http://localhost:5000/api';
+
+        // ── App State ──────────────────────────────────────────
+        let allTeachers  = [];
+        let activeFilter = 'all';
+        let editingId    = null;
+
+        // ── Theme ──────────────────────────────────────────────
+        const savedTheme = localStorage.getItem('profpro-theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeToggle').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+            localStorage.setItem('profpro-theme', next);
+        }
+
+        // ── Department color assignment ────────────────────────
+        const deptColorMap = {};
+        let deptColorIndex = 0;
+
+        function getDeptColor(dept) {
+            const key = (dept || '').toLowerCase().trim() || '__none__';
+            if (!(key in deptColorMap)) {
+                deptColorMap[key] = deptColorIndex % 8;
+                deptColorIndex++;
+            }
+            return deptColorMap[key];
+        }
+
+        // ── Status colour map ──────────────────────────────────
+        const STATUS_COLORS = {
+            'Available':  { color: '#3ddc84', bg: 'rgba(61,220,132,0.1)',  border: 'rgba(61,220,132,0.3)'  },
+            'In Lecture': { color: '#ff6b6b', bg: 'rgba(255,107,107,0.1)', border: 'rgba(255,107,107,0.3)' },
+            'In Meeting': { color: '#5b9cf6', bg: 'rgba(91,156,246,0.1)',  border: 'rgba(91,156,246,0.3)'  },
+            'On Break':   { color: '#ff9f43', bg: 'rgba(255,159,67,0.1)',  border: 'rgba(255,159,67,0.3)'  },
+            'Offline':    { color: '#4a5568', bg: 'rgba(74,85,104,0.1)',   border: 'rgba(74,85,104,0.3)'   },
+        };
+
+        // ── Relative time helper ───────────────────────────────
+        function timeAgo(dateStr) {
+            if (!dateStr) return '';
+            const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+            if (diff < 60)    return 'just now';
+            if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+            return `${Math.floor(diff / 86400)}d ago`;
+        }
+
+        // ── API Helper ─────────────────────────────────────────
+        async function api(path, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+            };
+            if (body) options.body = JSON.stringify(body);
+
+            const res = await fetch(`${API_BASE}${path}`, options);
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.message || 'Something went wrong');
+            return data;
+        }
+
+        // ── Fetch All Teachers ─────────────────────────────────
+        async function loadTeachers() {
+            try {
+                allTeachers = await api('/teachers');
+                renderStats();
+                renderCards();
+            } catch (err) {
+                document.getElementById('teacherGrid').innerHTML = `
+                    <div class="state-box">
+                        <div class="icon">⚠️</div>
+                        <p>Could not connect to backend.<br/>Make sure the server is running on port 5000.</p>
+                    </div>`;
+                console.error('loadTeachers error:', err);
+            }
+        }
+
+        // ── Stats Bar ──────────────────────────────────────────
+        function renderStats() {
+            const total = allTeachers.length;
+            const avail = allTeachers.filter(t => t.currentStatus === 'Available').length;
+            const busy  = allTeachers.filter(t => ['In Lecture', 'In Meeting'].includes(t.currentStatus)).length;
+            const pct   = total ? Math.round((avail / total) * 100) : 0;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statAvail').textContent = avail;
+            document.getElementById('statBusy').textContent  = busy;
+            document.getElementById('statPct').textContent   = `${pct}%`;
+        }
+
+        // ── Empty State SVG ────────────────────────────────────
+        function emptyStateSVG(isSearch) {
+            if (isSearch) {
+                return `
+                <div class="empty-state">
+                    <div class="empty-illustration">
+                        <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="65" cy="55" r="32" stroke="var(--text-muted)" stroke-width="3" fill="none"/>
+                            <line x1="88" y1="78" x2="115" y2="105" stroke="var(--text-muted)" stroke-width="3" stroke-linecap="round"/>
+                            <line x1="52" y1="48" x2="78" y2="48" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="52" y1="56" x2="70" y2="56" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+                            <circle cx="115" cy="25" r="8" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="111" y="29" fill="var(--accent)" font-size="9" font-weight="bold">?</text>
+                        </svg>
+                    </div>
+                    <div class="empty-title">No results found</div>
+                    <div class="empty-desc">No teachers match your search. Try a different name, subject, or department.</div>
+                    <div class="empty-action">
+                        <button class="btn btn-ghost" onclick="document.getElementById('searchInput').value=''; renderCards()">Clear search</button>
+                    </div>
+                </div>`;
+            } else {
+                return `
+                <div class="empty-state">
+                    <div class="empty-illustration">
+                        <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="20" y="30" width="120" height="75" rx="10" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+                            <rect x="35" y="50" width="40" height="35" rx="6" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <circle cx="55" cy="60" r="8" fill="var(--accent)" opacity="0.5"/>
+                            <line x1="46" y1="74" x2="64" y2="74" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                            <rect x="85" y="50" width="40" height="8" rx="4" fill="var(--border)"/>
+                            <rect x="85" y="64" width="30" height="8" rx="4" fill="var(--border)"/>
+                            <rect x="85" y="78" width="35" height="8" rx="4" fill="var(--border)"/>
+                            <circle cx="130" cy="22" r="14" fill="var(--accent)" opacity="0.9"/>
+                            <text x="124" y="27" fill="#000" font-size="14" font-weight="bold">+</text>
+                        </svg>
+                    </div>
+                    <div class="empty-title">No teachers yet</div>
+                    <div class="empty-desc">Add your first faculty member to start tracking availability.</div>
+                    <div class="empty-action">
+                        <button class="btn btn-primary" onclick="openAddModal()">＋ Add Teacher</button>
+                    </div>
+                </div>`;
+            }
+        }
+
+        // ── Render Teacher Cards ───────────────────────────────
+        function renderCards() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            const filtered = allTeachers.filter(t => {
+                const matchesFilter = activeFilter === 'all' || t.currentStatus === activeFilter;
+                const matchesSearch = !query
+                    || t.name.toLowerCase().includes(query)
+                    || (t.subject || '').toLowerCase().includes(query)
+                    || (t.department || '').toLowerCase().includes(query);
+                return matchesFilter && matchesSearch;
+            });
+
+            const grid = document.getElementById('teacherGrid');
+
+            if (filtered.length === 0) {
+                grid.innerHTML = emptyStateSVG(!!query || activeFilter !== 'all');
+                return;
+            }
+
+            grid.innerHTML = filtered.map((t, i) => {
+                const initials = t.name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+                const sc = STATUS_COLORS[t.currentStatus] || STATUS_COLORS['Offline'];
+                const deptColor = getDeptColor(t.department);
+                const updatedAt = t.updatedAt || t.createdAt;
+                const timeLabel = updatedAt ? `Updated ${timeAgo(updatedAt)}` : '';
+
+                return `
+                <div class="teacher-card" data-status="${t.currentStatus}" data-dept-color="${deptColor}" style="animation-delay: ${i * 0.04}s">
+                    <div class="card-top">
+                        <div class="teacher-avatar">${escHtml(initials)}</div>
+                        <div class="card-actions">
+                            <button class="icon-btn" title="Edit" onclick="openEditModal('${t._id}')">✏️</button>
+                            <button class="icon-btn del" title="Delete" onclick="deleteTeacher('${t._id}', '${escHtml(t.name)}')">🗑</button>
+                        </div>
+                    </div>
+
+                    <div class="teacher-name">${escHtml(t.name)}</div>
+                    <div class="teacher-meta">${escHtml(t.subject || '—')}</div>
+                    ${t.department ? `<div class="dept-tag">${escHtml(t.department)}</div>` : ''}
+
+                    <div class="status-badge"
+                         style="color:${sc.color}; background:${sc.bg}; border-color:${sc.border}"
+                         onclick="cycleStatus('${t._id}', '${t.currentStatus}')">
+                        <div class="status-dot"></div>
+                        ${escHtml(t.currentStatus)}
+                    </div>
+
+                    ${timeLabel ? `<div class="last-updated">🕐 ${timeLabel}</div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        // ── Filter ─────────────────────────────────────────────
+        function setFilter(status, btn) {
+            activeFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCards();
+        }
+
+        // ── Cycle Status ───────────────────────────────────────
+        const STATUS_CYCLE = ['Available', 'In Lecture', 'In Meeting', 'On Break', 'Offline'];
+
+        async function cycleStatus(id, current) {
+            const nextIndex = (STATUS_CYCLE.indexOf(current) + 1) % STATUS_CYCLE.length;
+            const nextStatus = STATUS_CYCLE[nextIndex];
+            try {
+                const updated = await api(`/teachers/${id}`, 'PUT', { currentStatus: nextStatus });
+                const idx = allTeachers.findIndex(t => t._id === id);
+                if (idx !== -1) allTeachers[idx] = updated;
+                renderStats();
+                renderCards();
+                showToast(`✅ Status updated to "${nextStatus}"`, 'success');
+            } catch (err) {
+                showToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        // ── Delete ─────────────────────────────────────────────
+        async function deleteTeacher(id, name) {
+            if (!confirm(`Remove "${name}" from the directory?`)) return;
+            try {
+                await api(`/teachers/${id}`, 'DELETE');
+                allTeachers = allTeachers.filter(t => t._id !== id);
+                renderStats();
+                renderCards();
+                showToast(`🗑 ${name} removed.`, 'success');
+            } catch (err) {
+                showToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        // ── Modal Logic ────────────────────────────────────────
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Add Teacher';
+            clearForm();
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        function openEditModal(id) {
+            const teacher = allTeachers.find(t => t._id === id);
+            if (!teacher) return;
+
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Teacher';
+            document.getElementById('fieldName').value    = teacher.name || '';
+            document.getElementById('fieldSubject').value = teacher.subject || '';
+            document.getElementById('fieldDept').value    = teacher.department || '';
+            document.getElementById('fieldStatus').value  = teacher.currentStatus || 'Available';
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        function handleOverlayClick(e) {
+            if (e.target === document.getElementById('modalOverlay')) closeModal();
+        }
+
+        function clearForm() {
+            ['fieldName', 'fieldSubject', 'fieldDept'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('fieldStatus').value = 'Available';
+        }
+
+        // ── Save ───────────────────────────────────────────────
+        async function saveTeacher() {
+            const name    = document.getElementById('fieldName').value.trim();
+            const subject = document.getElementById('fieldSubject').value.trim();
+            const dept    = document.getElementById('fieldDept').value.trim();
+            const status  = document.getElementById('fieldStatus').value;
+
+            if (!name) { showToast('❌ Name is required.', 'error'); return; }
+
+            const payload = { name, subject, department: dept, currentStatus: status };
+
+            try {
+                if (editingId) {
+                    const updated = await api(`/teachers/${editingId}`, 'PUT', payload);
+                    const idx = allTeachers.findIndex(t => t._id === editingId);
+                    if (idx !== -1) allTeachers[idx] = updated;
+                    showToast(`✅ ${updated.name} updated!`, 'success');
+                } else {
+                    const created = await api('/teachers', 'POST', payload);
+                    allTeachers.push(created);
+                    showToast(`✅ ${created.name} added!`, 'success');
+                }
+                closeModal();
+                renderStats();
+                renderCards();
+            } catch (err) {
+                showToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        // ── Toast ──────────────────────────────────────────────
+        let toastTimer;
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ── Utility ───────────────────────────────────────────
+        function escHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ── Import State ───────────────────────────────────────
+        let pendingImports = [];
+
+        // ── Import Modal ───────────────────────────────────────
+        function openImportModal(entries, title, desc) {
+            pendingImports = entries.map((e, i) => ({ ...e, _tempId: i }));
+            document.getElementById('importModalTitle').textContent = title || 'Preview Import';
+            document.getElementById('importModalDesc').textContent = desc || `${pendingImports.length} teacher(s) found. Review before adding.`;
+            renderImportPreview();
+            document.getElementById('importOverlay').classList.add('open');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importOverlay').classList.remove('open');
+            pendingImports = [];
+            // Reset file inputs so same file can be re-uploaded
+            document.getElementById('csvFileInput').value = '';
+            document.getElementById('imgFileInput').value = '';
+        }
+
+        function handleImportOverlayClick(e) {
+            if (e.target === document.getElementById('importOverlay')) closeImportModal();
+        }
+
+        function renderImportPreview() {
+            const list = document.getElementById('importPreviewList');
+            if (pendingImports.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:1rem;">No entries to import.</div>';
+                document.getElementById('importConfirmBtn').disabled = true;
+                return;
+            }
+            document.getElementById('importConfirmBtn').disabled = false;
+            document.getElementById('importConfirmBtn').textContent = `Add ${pendingImports.length} Teacher${pendingImports.length > 1 ? 's' : ''}`;
+            list.innerHTML = pendingImports.map(e => `
+                <div class="import-item">
+                    <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-dim);display:grid;place-items:center;font-weight:700;color:var(--accent);font-family:var(--mono);font-size:0.8rem;flex-shrink:0;">
+                        ${escHtml((e.name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase())}
+                    </div>
+                    <div class="import-item-info">
+                        <div class="import-item-name">${escHtml(e.name || '—')}</div>
+                        <div class="import-item-meta">${escHtml(e.subject || '—')} · ${escHtml(e.department || '—')} · <span style="color:var(--green)">${escHtml(e.currentStatus || 'Available')}</span></div>
+                    </div>
+                    <button class="import-item-remove" onclick="removeImportItem(${e._tempId})" title="Remove">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function removeImportItem(tempId) {
+            pendingImports = pendingImports.filter(e => e._tempId !== tempId);
+            renderImportPreview();
+            document.getElementById('importModalDesc').textContent = `${pendingImports.length} teacher(s) to import.`;
+        }
+
+        async function confirmImport() {
+            const btn = document.getElementById('importConfirmBtn');
+            btn.disabled = true;
+            btn.textContent = 'Adding…';
+            let added = 0, failed = 0;
+            for (const entry of pendingImports) {
+                try {
+                    const { _tempId, ...payload } = entry;
+                    const created = await api('/teachers', 'POST', {
+                        name: payload.name,
+                        subject: payload.subject || '',
+                        department: payload.department || '',
+                        currentStatus: payload.currentStatus || 'Available',
+                    });
+                    allTeachers.push(created);
+                    added++;
+                } catch { failed++; }
+            }
+            closeImportModal();
+            renderStats();
+            renderCards();
+            if (added)   showToast(`✅ ${added} teacher(s) imported!`, 'success');
+            if (failed)  showToast(`⚠️ ${failed} entries failed.`, 'error');
+        }
+
+        // ── CSV / Excel Import ─────────────────────────────────
+        async function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            if (ext === 'csv') {
+                const text = await file.text();
+                const entries = parseCSV(text);
+                if (!entries.length) { showToast('⚠️ No valid rows found in CSV.', 'error'); return; }
+                openImportModal(entries, '📊 Import from CSV', `Found ${entries.length} teacher(s) in "${file.name}".`);
+            } else if (ext === 'xlsx' || ext === 'xls') {
+                // Use SheetJS via CDN
+                if (!window.XLSX) {
+                    showToast('⏳ Loading Excel parser…', 'success');
+                    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+                }
+                const buf = await file.arrayBuffer();
+                const wb = XLSX.read(buf, { type: 'array' });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                const entries = rows.map(row => normalizeRow(row)).filter(e => e.name);
+                if (!entries.length) { showToast('⚠️ No valid rows found. Check column names.', 'error'); return; }
+                openImportModal(entries, '📊 Import from Excel', `Found ${entries.length} teacher(s) in "${file.name}".`);
+            }
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return [];
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+            return lines.slice(1).map(line => {
+                const vals = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                const row = {};
+                headers.forEach((h, i) => row[h] = vals[i] || '');
+                return normalizeRow(row);
+            }).filter(e => e.name);
+        }
+
+        // Maps flexible column names → our schema
+        function normalizeRow(row) {
+            const get = (...keys) => {
+                for (const k of keys) {
+                    const val = row[k] || row[k.toLowerCase()] || row[k.toUpperCase()] || '';
+                    if (val) return String(val).trim();
+                }
+                return '';
+            };
+            const name    = get('name', 'teacher', 'faculty', 'professor', 'full name', 'teacher name');
+            const subject = get('subject', 'course', 'paper', 'module', 'class');
+            const dept    = get('department', 'dept', 'division', 'school');
+            const status  = get('status', 'currentstatus', 'availability');
+            const VALID_STATUSES = ['Available', 'In Lecture', 'In Meeting', 'On Break', 'Offline'];
+            const matchedStatus = VALID_STATUSES.find(s => s.toLowerCase() === status.toLowerCase()) || 'Available';
+            return { name, subject, department: dept, currentStatus: matchedStatus };
+        }
+
+        // ── Image / Timetable Scan (Claude AI) ────────────────
+        async function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Convert to base64
+            const base64 = await new Promise((res, rej) => {
+                const r = new FileReader();
+                r.onload = () => res(r.result.split(',')[1]);
+                r.onerror = rej;
+                r.readAsDataURL(file);
+            });
+
+            // Show scanning overlay
+            document.getElementById('scanOverlay').classList.add('open');
+            document.getElementById('scanStatusText').textContent = 'Scanning timetable…';
+
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1000,
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                {
+                                    type: 'image',
+                                    source: { type: 'base64', media_type: file.type || 'image/jpeg', data: base64 }
+                                },
+                                {
+                                    type: 'text',
+                                    text: `You are a timetable parser. Extract all teacher/faculty names from this timetable image.
+For each teacher, also extract their subject and department if visible.
+Return ONLY a JSON array, no explanation, no markdown, like:
+[{"name":"Dr. Arjun Mehta","subject":"Data Structures","department":"Computer Science"},...]
+If you cannot find any teachers, return [].`
+                                }
+                            ]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById('scanOverlay').classList.remove('open');
+
+                if (!response.ok) {
+                    showToast(`❌ AI scan failed: ${data.error?.message || 'Unknown error'}`, 'error');
+                    return;
+                }
+
+                const text = data.content?.map(b => b.text || '').join('') || '';
+                let entries = [];
+                try {
+                    const clean = text.replace(/```json|```/g, '').trim();
+                    entries = JSON.parse(clean);
+                } catch {
+                    showToast('⚠️ Could not parse AI response. Try a clearer image.', 'error');
+                    return;
+                }
+
+                if (!entries.length) {
+                    showToast('⚠️ No teachers found in this image.', 'error');
+                    return;
+                }
+
+                const normalized = entries.map(e => ({
+                    name: e.name || '',
+                    subject: e.subject || '',
+                    department: e.department || '',
+                    currentStatus: 'Available',
+                })).filter(e => e.name);
+
+                openImportModal(normalized, '📷 Timetable Scan Results', `AI found ${normalized.length} teacher(s) in your image.`);
+
+            } catch (err) {
+                document.getElementById('scanOverlay').classList.remove('open');
+                showToast(`❌ Scan error: ${err.message}`, 'error');
+            }
+        }
+
+        // ── Utility: load external script dynamically ──────────
+        function loadScript(src) {
+            return new Promise((res, rej) => {
+                const s = document.createElement('script');
+                s.src = src; s.onload = res; s.onerror = rej;
+                document.head.appendChild(s);
+            });
+        }
+
+        // ── Init ───────────────────────────────────────────────
+        loadTeachers();
+    </script>
+</body>
+</html>
