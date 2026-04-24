@@ -1,4 +1,4 @@
-# ProfSync 📡
+# ProfPro 📡
 
 > A real-time faculty availability tracker — built with Node.js, Express, MongoDB Atlas, and vanilla JS. Deployed on Vercel.
 
