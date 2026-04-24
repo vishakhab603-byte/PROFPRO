@@ -4,8 +4,7 @@
 
 Students can instantly check whether a professor is available, in a lecture, in a meeting, or offline — no more wandering hallways.
 
-**Live demo:** `https://profsync.vercel.app` ← replace with your URL after deploy
-
+**Live demo:** `https://profpro.vercel.app` ← 
 ---
 
 ## 🖥️ Tech Stack
@@ -29,8 +28,6 @@ Students can instantly check whether a professor is available, in a lecture, in 
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/yourusername/profsync.git
-cd profsync
 
 # 2. Install dependencies
 npm install
@@ -82,7 +79,7 @@ After deploying, go to your project on **vercel.com → Settings → Environment
 
 | Key           | Value                                  |
 |---------------|----------------------------------------|
-| `MONGODB_URI` | your full MongoDB Atlas connection string |
+| `MONGODB_URI` |  MongoDB Atlas connection string |
 
 Then redeploy:
 
